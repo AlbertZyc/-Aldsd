@@ -10,47 +10,72 @@ import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
+/**
+ * @author vision
+ * @function build the request
+ */
 public class CommonRequest {
-    public static Request createGetRequest(String url, RequestParams params) {
+    /**
+     * create the key-value Request
+     *
+     * @param url
+     * @param params
+     * @return
+     */
+    public static Request createPostRequest(String url, RequestParams params) {
         return createPostRequest(url, params, null);
     }
 
     /**
      * 可以带请求头的Post请求
-     * @param url     地址
-     * @param params  参数
-     * @param headers 头
-     * @return request
+     *
+     * @param url
+     * @param params
+     * @param headers
+     * @return
      */
     public static Request createPostRequest(String url, RequestParams params, RequestParams headers) {
-        FormBody.Builder mFormBodyBuilder = new FormBody.Builder();
+        FormBody.Builder mFormBodyBuild = new FormBody.Builder();
         if (params != null) {
             for (Map.Entry<String, String> entry : params.urlParams.entrySet()) {
-                mFormBodyBuilder.add(entry.getKey(), entry.getValue());
+                mFormBodyBuild.add(entry.getKey(), entry.getValue());
             }
-
         }
-        Headers.Builder mHeaderBuilder = new Headers.Builder();
+        //添加请求头
+        Headers.Builder mHeaderBuild = new Headers.Builder();
         if (headers != null) {
             for (Map.Entry<String, String> entry : headers.urlParams.entrySet()) {
-                mHeaderBuilder.add(entry.getKey(), entry.getValue());
+                mHeaderBuild.add(entry.getKey(), entry.getValue());
             }
         }
-        return new Request
-                .Builder()
-                .url(url)
-                .headers(mHeaderBuilder.build())
-                .post(mFormBodyBuilder.build())
+        FormBody mFormBody = mFormBodyBuild.build();
+        Headers mHeader = mHeaderBuild.build();
+        Request request = new Request.Builder().url(url).
+                post(mFormBody).
+                headers(mHeader)
                 .build();
+        return request;
+    }
+
+    /**
+     * ressemble the params to the url
+     *
+     * @param url
+     * @param params
+     * @return
+     */
+    public static Request createGetRequest(String url, RequestParams params) {
+
+        return createGetRequest(url, params, null);
     }
 
     /**
      * 可以带请求头的Get请求
      *
-     * @param url     地址
-     * @param params  参数
-     * @param headers 头
-     * @return request
+     * @param url
+     * @param params
+     * @param headers
+     * @return
      */
     public static Request createGetRequest(String url, RequestParams params, RequestParams headers) {
         StringBuilder urlBuilder = new StringBuilder(url).append("?");
@@ -73,8 +98,11 @@ public class CommonRequest {
                 .headers(mHeader)
                 .build();
     }
+
     /**
      * 文件上传请求
+     *
+     * @return
      */
     private static final MediaType FILE_TYPE = MediaType.parse("application/octet-stream");
 
