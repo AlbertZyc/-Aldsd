@@ -26,7 +26,16 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation rootProject.depsLibs.appcompact
     implementation(rootProject.depsLibs.magicindicator)
-    implementation 'com.android.support:support-v4:28.0.0'
+
+    implementation project(path: ':lib_commin_ui')
     implementation project(path: ':lib_network')
+    implementation project(path: ':lib_image_loader')
+
+    implementation rootProject.depsLibs.rxjava
+    implementation rootProject.depsLibs.rxandroid
+    implementation rootProject.depsLibs.eventbus
+    //gson解析库
+    implementation rootProject.depsLibs.gson
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 
 }

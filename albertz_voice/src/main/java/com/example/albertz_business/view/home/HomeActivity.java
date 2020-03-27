@@ -1,4 +1,4 @@
-package com.example.albertz_business.view;
+package com.example.albertz_business.view.home;
 
 
 import android.content.Context;
@@ -8,12 +8,19 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.example.albertz_business.CHANNEL;
 import com.example.albertz_business.HomePagerAdapter;
 import com.example.albertz_business.R;
 import com.example.albertz_business.ScaleTransitionPagerTitleView;
+import com.example.albertz_business.model.login.user.LoginEvent;
+import com.example.albertz_business.view.login.LoginActivity;
+import com.example.albertz_business.model.login.manager.UserManager;
+import com.example.lib_image_loader.ImageLoaderManager;
 
 import net.lucode.hackware.magicindicator.MagicIndicator;
 import net.lucode.hackware.magicindicator.ViewPagerHelper;
@@ -23,6 +30,10 @@ import net.lucode.hackware.magicindicator.buildins.commonnavigator.abs.IPagerInd
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.abs.IPagerTitleView;
 import net.lucode.hackware.magicindicator.buildins.commonnavigator.titles.SimplePagerTitleView;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 public class HomeActivity extends FragmentActivity implements View.OnClickListener {
     private static final CHANNEL[] CHANNELS = new CHANNEL[]{CHANNEL.MY, CHANNEL.DISCORY, CHANNEL.FRIEND};
     private DrawerLayout mDrawerLayout;
@@ -30,10 +41,13 @@ public class HomeActivity extends FragmentActivity implements View.OnClickListen
     private View mSeearchView;
     private ViewPager mViewPager;
     private HomePagerAdapter mAdapter;
+    private LinearLayout unLogginLayout;
+    private ImageView mPhotoView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
         setContentView(R.layout.activity_home);
         initView();
         initData();
@@ -49,9 +63,13 @@ public class HomeActivity extends FragmentActivity implements View.OnClickListen
         mToggleView.setOnClickListener(this);
         mSeearchView = findViewById(R.id.search_view);
         mViewPager = findViewById(R.id.view_pager);
-        mAdapter =  new HomePagerAdapter(getSupportFragmentManager(),CHANNELS);
+        mAdapter = new HomePagerAdapter(getSupportFragmentManager(), CHANNELS);
         mViewPager.setAdapter(mAdapter);
         initMagicIndicator();
+
+        unLogginLayout = findViewById(R.id.unloggin_layout);
+        unLogginLayout.setOnClickListener(this);
+        mPhotoView = findViewById(R.id.avatr_view);
     }
 
     private void initMagicIndicator() {
@@ -90,11 +108,30 @@ public class HomeActivity extends FragmentActivity implements View.OnClickListen
             }
         });
         magicIndicator.setNavigator(commonNavigator);
-        ViewPagerHelper.bind(magicIndicator,mViewPager);
+        ViewPagerHelper.bind(magicIndicator, mViewPager);
     }
 
     @Override
     public void onClick(View view) {
-
+        switch (view.getId()){
+            case R.id.unloggin_layout:
+                if (!UserManager.getInstance().hasLogined()) {
+                    LoginActivity.start(this);
+                } else {
+                    mDrawerLayout.closeDrawer(Gravity.LEFT);
+                }
+                break;
+        }
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onLoginEvent(LoginEvent event){
+        unLogginLayout.setVisibility(View.GONE);
+        mPhotoView.setVisibility(View.VISIBLE);
+        ImageLoaderManager.getInstance().displayImageForCircle(mPhotoView,UserManager.getInstance().getUser().data.photoUrl);
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 }
