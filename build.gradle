@@ -25,7 +25,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.0'
         //greendao插件依赖
-//        classpath 'org.greenrobot:greendao-gradle-plugin:3.2.2'
+        classpath 'org.greenrobot:greendao-gradle-plugin:3.2.2'
         //ARouter插件依赖
 //        classpath "com.alibaba:arouter-register:1.0.2"
     }
