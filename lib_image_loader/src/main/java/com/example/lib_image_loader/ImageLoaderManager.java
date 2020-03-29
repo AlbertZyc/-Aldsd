@@ -32,10 +32,13 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.bumptech.glide.load.resource.bitmap.BitmapTransitionOptions.withCrossFade;
+
 /**
- * 图处加载类，外界唯一调用类,直持为view,notification,appwidget加载图片
+ * 图处加载类，外界唯一调用类,直持为view,notifaication,appwidget加载图片
  */
 public class ImageLoaderManager {
+
     private ImageLoaderManager() {
     }
 
@@ -48,63 +51,54 @@ public class ImageLoaderManager {
     }
 
     /**
-     * 加载图片方法
-     */
-    public void displayImageForView(ImageView imageView, String url) {
-        Glide
-                .with(imageView.getContext())
-                .asBitmap()
-                .load(url)
-                .apply(initCommonRequestOption())
-                .transition(BitmapTransitionOptions.withCrossFade())
-                .into(imageView);
-    }
-
-    /**
      * 为notification加载图
      */
     public void displayImageForNotification(Context context, RemoteViews rv, int id,
                                             Notification notification, int NOTIFICATION_ID, String url) {
-        this.displayImageForTarget(context, initNotificationTarget(context, id, rv, notification, NOTIFICATION_ID), url);
-    }
-
-    /*
-     * 初始化Notification Target
-     */
-    private NotificationTarget initNotificationTarget(Context context, int id, RemoteViews rv,
-                                                      Notification notification, int NOTIFICATION_ID) {
-        NotificationTarget notificationTarget =
-                new NotificationTarget(context, id, rv, notification, NOTIFICATION_ID);
-        return notificationTarget;
+        this.displayImageForTarget(context,
+                initNotificationTarget(context, id, rv, notification, NOTIFICATION_ID), url);
     }
 
     /**
-     * 为非view加载图片
+     * 不带回调的加载
      */
-    private void displayImageForTarget(Context context, Target target, String url) {
-        this.displayImageForTarget(context, target, url, null);
+    public void displayImageForView(ImageView imageView, String url) {
+        this.displayImageForView(imageView, url, null);
     }
 
     /**
-     * 为非view加载图片
+     * 带回调的加载图片方法
      */
-    private void displayImageForTarget(Context context, Target target, String url,
-                                       CustomRequestListener requestListener) {
-        Glide.with(context)
+    public void displayImageForView(ImageView imageView, String url,
+                                    CustomRequestListener requestListener) {
+        Glide.with(imageView.getContext())
                 .asBitmap()
                 .load(url)
                 .apply(initCommonRequestOption())
-                .transition(BitmapTransitionOptions.withCrossFade())
-                .fitCenter()
-                .listener(requestListener)
-                .into(target);
+                .transition(withCrossFade())
+                .into(imageView);
     }
 
     /**
-     * @param group
-     * @param url
+     * 带回调的加载图片方法
      */
-    public void displayImageForGroup(final ViewGroup group, String url) {
+    public void displayImageForCircle(final ImageView imageView, String url) {
+        Glide.with(imageView.getContext())
+                .asBitmap()
+                .load(url)
+                .apply(initCommonRequestOption())
+                .into(new BitmapImageViewTarget(imageView) {
+                    @Override
+                    protected void setResource(final Bitmap resource) {
+                        RoundedBitmapDrawable circularBitmapDrawable =
+                                RoundedBitmapDrawableFactory.create(imageView.getResources(), resource);
+                        circularBitmapDrawable.setCircular(true);
+                        imageView.setImageDrawable(circularBitmapDrawable);
+                    }
+                });
+    }
+
+    public void displayImageForViewGroup(final ViewGroup group, String url) {
         Glide.with(group.getContext())
                 .asBitmap()
                 .load(url)
@@ -129,9 +123,7 @@ public class ImageLoaderManager {
                                 .subscribe(new Consumer<Drawable>() {
                                     @Override
                                     public void accept(Drawable drawable) throws Exception {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                            group.setBackground(drawable);
-                                        }
+                                        group.setBackground(drawable);
                                     }
                                 });
                     }
@@ -139,24 +131,35 @@ public class ImageLoaderManager {
     }
 
     /**
-     * 加载圆形
-     * 图片
+     * 为非view加载图片
      */
-    public void displayImageForCircle(final ImageView imageView, String url) {
-        Glide
-                .with(imageView.getContext())
+    private void displayImageForTarget(Context context, Target target, String url) {
+        this.displayImageForTarget(context, target, url, null);
+    }
+
+    /**
+     * 为非view加载图片
+     */
+    private void displayImageForTarget(Context context, Target target, String url,
+                                       CustomRequestListener requestListener) {
+        Glide.with(context)
                 .asBitmap()
                 .load(url)
                 .apply(initCommonRequestOption())
-                .transition(BitmapTransitionOptions.withCrossFade())
-                .into(new BitmapImageViewTarget(imageView) {
-                    @Override
-                    protected void setResource(Bitmap resource) {
-                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(imageView.getResources(), resource);
-                        drawable.setCircular(true);
-                        imageView.setImageDrawable(drawable);
-                    }
-                });
+                .transition(withCrossFade())
+                .fitCenter()
+                .listener(requestListener)
+                .into(target);
+    }
+
+    /*
+     * 初始化Notification Target
+     */
+    private NotificationTarget initNotificationTarget(Context context, int id, RemoteViews rv,
+                                                      Notification notification, int NOTIFICATION_ID) {
+        NotificationTarget notificationTarget =
+                new NotificationTarget(context, id, rv, notification, NOTIFICATION_ID);
+        return notificationTarget;
     }
 
     private RequestOptions initCommonRequestOption() {
